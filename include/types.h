@@ -2,7 +2,7 @@
 #ifndef __CON_TYPES_H__
 #define __CON_TYPES_H__
 
-#if defined(_WINDOWS) || defined(WINAPI_FAMILY)
+#if defined(_WINDOWS) || defined(WINAPI_FAMILY) || defined(WIN32_COMPILE_LINUX)
 #include <windows.h>
 #endif
 
@@ -133,7 +133,11 @@ struct _tVariant
         bool           bVal;
         char           chVal;
         wchar_t        wchVal;
+     #if defined(WIN32_COMPILE_LINUX)
+      double date;
+      #else
         DATE           date;
+      #endif
         IID            IDVal;
         struct _tVariant *pvarVal;
         struct tm      tmVal;

@@ -44,9 +44,12 @@ endif ()
 target_include_directories(${TARGET} PRIVATE
         include)
 
-if (WIN32 AND NOT MSVC)
-    message(FATAL_ERROR "Must be compiled with MSVC on Windows")
-endif ()
+#
+# Почему-то срабатывает даже если MSVC установлена, пробовал на Windows 11
+#if (WIN32 AND NOT MSVC)
+#    message(FATAL_ERROR "Must be compiled with MSVC on Windows")
+#endif ()
+#
 
 if (WIN32)
     if (STATIC_CRT)
@@ -60,6 +63,27 @@ if (WIN32)
 endif ()
 
 if (UNIX)
+
+    if (WIN32_COMPILE_LINUX STREQUAL 1)
+       message(STATUS "Win32 compile linux on")
+       
+       add_definitions(-DWIN32_COMPILE_LINUX)
+       
+       # specify the cross compiler
+       set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
+       set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
+       set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)
+
+       set(CMAKE_FIND_ROOT_PATH /usr/x86_64-w64-mingw32)
+
+       # search for programs in the build host directories
+       set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+       # for libraries and headers in the target directories
+       set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+       set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+    endif()
+    
     if (TARGET_ARCH STREQUAL "x86")
         set(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
         set(CMAKE_CXX_FLAGS "-m32 ${CMAKE_CXX_FLAGS}")

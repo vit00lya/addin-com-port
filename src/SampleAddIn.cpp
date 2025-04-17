@@ -47,7 +47,7 @@ SampleAddIn::SampleAddIn() {
 
 variant_t SampleAddIn::GetLine() {
     xserial::ComPort com = xserial::ComPort(
-                            0,
+                          4,
                           baud_rate_,
                           parity_,
                           data_bits_,
