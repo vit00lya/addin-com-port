@@ -2,11 +2,22 @@ cmake_minimum_required(VERSION 3.10)
 project(SampleAddIn)
 
 set(CMAKE_CXX_STANDARD 17)
-set(TARGET SampleAddIn)
+set(TARGET ComPortTools)
 
 option(CASE_INSENSITIVE "Case insensitive method names" OFF) #Имена методов без учета регистра
 option(STATIC_CRT "Static CRT linkage" OFF) #Это флаг, который указывает, что проект должен линковаться со статической версией стандартной библиотеки C/C++ (CRT — C Runtime Library), а не с динамической (DLL).
 option(OUT_PARAMS "Support output parameters" OFF) # Поддержка выходных параметров
+
+if (DEBUG_APP STREQUAL 1)
+
+list(APPEND SOURCES
+        src/test_app.cpp
+	src/xserial.cpp
+        src/xserial.hpp)
+
+add_executable(${TARGET} ${SOURCES})
+
+else()
 
 list(APPEND SOURCES
         src/addin.def
@@ -15,8 +26,8 @@ list(APPEND SOURCES
         src/exports.cpp
         src/Component.cpp
         src/Component.h
-        src/SampleAddIn.cpp
-        src/SampleAddIn.h
+        src/ComPortTools.cpp
+        src/ComPortTools.h
 	src/xserial.cpp
         src/xserial.hpp)
 
@@ -95,4 +106,6 @@ if (ANDROID)
         add_custom_command(TARGET ${TARGET} POST_BUILD
                 COMMAND ${CMAKE_STRIP} ${CMAKE_SHARED_LIBRARY_PREFIX}${TARGET}${CMAKE_SHARED_LIBRARY_SUFFIX})
     endif ()
+endif ()
+
 endif ()

@@ -37,7 +37,7 @@
 #include <vector>
 #include <sstream>
 
-//#define LINUX_SPECIFY_NAME_COM_PORT "ttyUSB"
+#define LINUX_SPECIFY_NAME_COM_PORT "ttyUSB"
 //#define LINUX_SPECIFY_NAME_COM_PORT "ttyACM"
 
 namespace xserial {
