@@ -48,9 +48,6 @@
 #include <sstream>
 #include <ctime>
 
-// время ожидания получения символов до символа '\n'
-#define COM_PORT_GETLINE_MAX_TIME 1000
-
 #ifdef __linux
 // получить список COM портов
 std::list<std::string> getComList(void);
@@ -62,7 +59,14 @@ static std::string get_driver(const std::string& tty);
 
 namespace xserial {
 
-    bool ComPort::openPort(unsigned short numComPort, unsigned long baudRate, eParity parity, char dataBits, eStopBit stopBits, eMode comPortMode) {
+    bool ComPort::openPort(unsigned short numComPort,
+			   unsigned long baudRate,
+			   eParity parity,
+			   char dataBits,
+			   eStopBit stopBits,
+			   eMode comPortMode,
+			   unsigned long timeout,
+			   std::string comPortName) {
         if (isOpenPort) {
             close();
             isOpenPort = false;
@@ -471,25 +475,13 @@ namespace xserial {
         std::list<std::string>::iterator it = l.begin();
         while (it != l.end()) {
             std::string name = *it;
-            #ifndef LINUX_SPECIFY_NAME_COM_PORT
-                int pos = name.find_first_of("0123456789");
-                int pos0 = name.find_first_of("t");
-                isFound = true;
-                comPortName = name.substr(pos0, pos - pos0);
-                std::string num = name.substr(pos);
-                autoFoundComPort = atoi(const_cast<char*>(num.c_str()));
-                break;
-            #else
-            int posName = name.find(LINUX_SPECIFY_NAME_COM_PORT);
-            if (posName != std::string::npos) {
-                int pos = name.find_first_of("0123456789");
-                isFound = true;
-                comPortName = LINUX_SPECIFY_NAME_COM_PORT;
-                std::string num = name.substr(pos);
-                autoFoundComPort = atoi(num.c_str());
-                break;
-            }
-            #endif
+	    int pos = name.find_first_of("0123456789");
+	    int pos0 = name.find_first_of("t");
+            isFound = true;
+            comPortName = name.substr(pos0, pos - pos0);
+            std::string num = name.substr(pos);
+            autoFoundComPort = atoi(const_cast<char*>(num.c_str()));
+            break;
             it++;
         }
         return isFound;
@@ -743,15 +735,17 @@ namespace xserial {
         }
     }
 
-    std::string ComPort::getLine(void) {
+  std::string ComPort::getLine() {
         char data;
         std::string strLine = "";
         if (isOpenPort) {
+	  
+	  const TimePoint start_time = std::chrono::steady_clock::now(); 
             #if defined(__MINGW32__) || defined(_WIN32)
             DWORD dwBytesRead; // считанные байты
             DWORD numRedByte, temp; // temp - заглушка
             COMSTAT comstat; // структура для получения притяных байтов
-            while(1) {
+            while(1) { 
                 ClearCommError(hComPort, &temp, &comstat); // заполнить структуру COMSTAT
                 numRedByte = comstat.cbInQue; //получить количество принятых байтов
                 // будем проверять наличие принятого байта, пока он не появится
@@ -764,6 +758,11 @@ namespace xserial {
                     printf("read error\r\n");
                     return strLine;
                 }
+	        if(timeout != 0)
+		  if(countdownIsOver(start_time, timeout)){
+		    break;
+		  }
+		 
                 if (dwBytesRead > 0) {
                     // если был получен символ завершения строки
                     if (data == '\n')
@@ -789,6 +788,12 @@ namespace xserial {
                     printf("read error\n");
                     return strLine;
                 }
+		
+		 if(timeout != 0)
+		  if(countdownIsOver(start_time, timeout)){
+		    break;
+		  }
+		 
                 if (iOut > 0) {
                     // если был получен символ завершения строки
                     if (data == '\n')
@@ -811,6 +816,12 @@ namespace xserial {
         }
         return strLine;
     }
+
+  bool ComPort::countdownIsOver(const TimePoint start_time, long timeout){
+    TimePoint end_time = std::chrono::steady_clock::now(); 
+    const std::chrono::steady_clock::duration dur = end_time - start_time;
+    return (Seconds(timeout) < dur);
+  }
 
     std::string ComPort::getWord(void) {
         char data;
@@ -1013,7 +1024,7 @@ namespace xserial {
             //std::cout << *it << std::endl;
             std::string text = *it;
             text += "\n";
-            ::printf(text.c_str());
+            ::printf("%s",text.c_str());
             it++;
         }
         #endif

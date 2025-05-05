@@ -22,22 +22,27 @@
 
 #include "Component.h"
 #include "xserial.hpp"
+#include <memory>
+#include "types.h"
 
 class ComPortTools final : public Component {
 public:
     const char *Version = u8"1.0.0";
 
     ComPortTools();
+    void Init(const variant_t &number_com_port = 0,
+	      const variant_t &baud_rate = 9600,
+	      const variant_t &data_bits = 8,
+	      const variant_t &parity = "NOPARITY",
+       	      const variant_t &stop_bit = "ONESTOPBIT",
+	      const variant_t &timeout = 0);
+    const variant_t &linux_name_com_port = "ttyUSB";
+    variant_t GetLine();
 
 private:
 
     std::string extensionName() override;
-    variant_t GetLine();
-    unsigned long baud_rate_ = 9600; ///< Скорость UART по умолчанию
-    xserial::ComPort::eParity parity_ = xserial::ComPort::COM_PORT_NOPARITY; ///< Настройка проверки четности по умолчанию
-    xserial::ComPort::eStopBit stop_bit_ = xserial::ComPort::COM_PORT_ONESTOPBIT; ///< Настройка стопового бита по умолчанию
-    const char data_bits_ = 8; ///< Количесвто бит данных по умолчанию
-    const xserial::ComPort::eMode mode_ = xserial::ComPort::COM_SYNCHRONOUS; ///< Настройка режима работы с портом по умолчанию
+    std::unique_ptr<xserial::ComPort> com_;
 
 };
 

@@ -41,17 +41,47 @@ ComPortTools::ComPortTools() {
     // Method registration.
     // Lambdas as method handlers are not supported.
     AddMethod(L"GetLine", L"ПолучитьСтроку", this, &ComPortTools::GetLine);
+    AddMethod(L"Init", L"ИнициализироватьПорт", this, &ComPortTools::Init);
 
 }
-
 
 variant_t ComPortTools::GetLine() {
-    xserial::ComPort com = xserial::ComPort(
-                          0,
-                          baud_rate_,
-                          parity_,
-                          data_bits_,
-                          stop_bit_);
-    std::string tmp = com.getLine();
-    return tmp;
+
+  if(com_ != nullptr) {
+    return com_->getLine();
+  }
+  else {
+    throw std::runtime_error(u8"Порт не настроен, получение строки невозможно.");
+  }
+  
 }
+
+void ComPortTools::Init(const variant_t &number_com_port,
+	      const variant_t &baud_rate,
+	      const variant_t &data_bits,
+	      const variant_t &parity,
+       	      const variant_t &stop_bit,
+	      const variant_t &timeout) {
+   long baud_rate_param = 0;
+    if (std::holds_alternative<int32_t>(baud_rate)) {
+      baud_rate_param = static_cast<long>(std::get<int32_t>(baud_rate));
+    } else {
+        throw std::runtime_error(u8"Не правльно задана скорость порта, параметр не является числом.");
+    }
+
+    long baud_number_com_port = 0;
+    if (std::holds_alternative<int32_t>(number_com_port)) {
+      baud_number_com_port = static_cast<long>(std::get<int32_t>(number_com_port));
+    } else {
+        throw std::runtime_error(u8"Не правльно задан номер порта, параметр не является числом.");
+    }
+   
+
+    com_ = std::make_unique<xserial::ComPort>(xserial::ComPort(
+                       baud_number_com_port,
+                       baud_rate_param,
+                       parity_,
+                       data_bits_,
+                       stop_bit_));
+}
+

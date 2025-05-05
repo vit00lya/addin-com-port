@@ -1,15 +1,16 @@
-#include "xserial.hpp"
+#include "ComPortTools.h"
+#include <iostream>
+#include <chrono>
+
 
 int main(){
-
-    xserial::ComPort com = xserial::ComPort(
-                          0,
-                          9600,
-                          xserial::ComPort::COM_PORT_NOPARITY,
-                          8,
-                          xserial::ComPort::COM_PORT_ONESTOPBIT);
-    std::string tmp = com.getLine();
-    std::cout << tmp << std::endl;
     
-  return 0;
+    ComPortTools com = ComPortTools();
+    auto tmp = com.GetLine();
+
+    if (std::holds_alternative<std::string>(tmp)) {
+      std::cout << std::get<std::string>(tmp) << std::endl;
+    }
+    
+    return 0;
 }

@@ -8,17 +8,6 @@ option(CASE_INSENSITIVE "Case insensitive method names" OFF) #Имена мет�
 option(STATIC_CRT "Static CRT linkage" OFF) #Это флаг, который указывает, что проект должен линковаться со статической версией стандартной библиотеки C/C++ (CRT — C Runtime Library), а не с динамической (DLL).
 option(OUT_PARAMS "Support output parameters" OFF) # Поддержка выходных параметров
 
-if (DEBUG_APP STREQUAL 1)
-
-list(APPEND SOURCES
-        src/test_app.cpp
-	src/xserial.cpp
-        src/xserial.hpp)
-
-add_executable(${TARGET} ${SOURCES})
-
-else()
-
 list(APPEND SOURCES
         src/addin.def
         src/stdafx.h
@@ -30,6 +19,17 @@ list(APPEND SOURCES
         src/ComPortTools.h
 	src/xserial.cpp
         src/xserial.hpp)
+
+if (DEBUG_APP STREQUAL 1)
+
+list(APPEND SOURCES
+        src/test_app.cpp)
+
+add_executable(${TARGET} ${SOURCES})
+target_include_directories(${TARGET} PRIVATE
+        include)
+
+else()
 
 if (ANDROID)
     list(APPEND SOURCES

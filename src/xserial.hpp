@@ -36,9 +36,11 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <chrono>
 
-#define LINUX_SPECIFY_NAME_COM_PORT "ttyUSB"
-//#define LINUX_SPECIFY_NAME_COM_PORT "ttyACM"
+using TimePoint = typename std::chrono::steady_clock::time_point;
+using Duration = typename std::chrono::steady_clock::duration;
+using Seconds = typename std::chrono::duration<long long>;
 
 namespace xserial {
 
@@ -87,13 +89,13 @@ namespace xserial {
             COM_SYNCHRONOUS, ///< синхронный режим
             COM_ASYNCHRONOUS, ///< асинхронный режим, не используется в текущей версии
         };
-
+      
         const unsigned long defaultBaudRate = 9600; ///< Скорость UART по умолчанию
         const eParity defaultParity = COM_PORT_NOPARITY; ///< Настройка проверки четности по умолчанию
         const eStopBit defaultStopBit = COM_PORT_ONESTOPBIT; ///< Настройка стопового бита по умолчанию
         const char defaultDataBits = 8; ///< Количесвто бит данных по умолчанию
         const eMode defaultMode = COM_SYNCHRONOUS; ///< Настройка режима работы с портом по умолчанию
-    private:
+          private:
         #if defined(__MINGW32__) || defined(_WIN32)
         HANDLE hComPort = NULL;
         DCB	dcbComPort;
@@ -102,17 +104,21 @@ namespace xserial {
         #endif
         #ifdef __linux
         int hComPort = 0;
-            #ifndef LINUX_SPECIFY_NAME_COM_PORT
-            std::string comPortName = "ttyUSB";
-            #else
-            std::string comPortName = LINUX_SPECIFY_NAME_COM_PORT;
-            #endif
         #endif
+        unsigned long timeout = 0;
         bool isOpenPort = false;
         unsigned char autoFoundComPort = 0;
         unsigned short numOpenComPort;
-        bool openPort(unsigned short numComPort, unsigned long baudRate, eParity parity, char dataBits, eStopBit stopBits, eMode comPortMode);
+        bool openPort(unsigned short numComPort,
+		      unsigned long baudRate,
+		      eParity parity,
+		      char dataBits,
+		      eStopBit stopBits,
+		      eMode comPortMode,
+		      unsigned long timeout = 0,
+		      std::string comPortName = "ttyUSB");
         bool foundComPort(void);
+        bool countdownIsOver(const TimePoint, long);
     public:
 
         /**@brief Инициализация порта с настройками по умолчанию
@@ -244,7 +250,7 @@ namespace xserial {
         до символа окончания строки '\n'.
         @return считанная строка
         */
-        std::string getLine(void);
+        std::string getLine(long timeout = 0L);
 
         /**@brief Получить из порта слово
         Функция считывает из порта массив данных типа string
