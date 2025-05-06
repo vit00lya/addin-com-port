@@ -69,19 +69,33 @@ void ComPortTools::Init(const variant_t &number_com_port,
         throw std::runtime_error(u8"Не правльно задана скорость порта, параметр не является числом.");
     }
 
-    long baud_number_com_port = 0;
+    long number_com_port_param = 0;
     if (std::holds_alternative<int32_t>(number_com_port)) {
-      baud_number_com_port = static_cast<long>(std::get<int32_t>(number_com_port));
+      number_com_port_param = static_cast<long>(std::get<int32_t>(number_com_port));
     } else {
         throw std::runtime_error(u8"Не правльно задан номер порта, параметр не является числом.");
     }
    
+    long data_bits_param = 0;
+    if (std::holds_alternative<int32_t>(data_bits)) {
+      data_bits_param = static_cast<long>(std::get<int32_t>(data_bits));
+    } else {
+        throw std::runtime_error(u8"Не правльно задано передаваемое по порту количество бит, параметр не является числом.");
+    }
 
+    long timeout_param = 0;
+    if (std::holds_alternative<int32_t>(timeout)) {
+      timeout_param = static_cast<long>(std::get<int32_t>(timeout));
+    } else {
+        throw std::runtime_error(u8"Не правльно задан, параметр не является числом.");
+    }
+    
     com_ = std::make_unique<xserial::ComPort>(xserial::ComPort(
-                       baud_number_com_port,
+                       number_com_port_param,
                        baud_rate_param,
-                       parity_,
-                       data_bits_,
-                       stop_bit_));
+		       data_bits_param,
+                       getParty(party),
+                       getStopBit(stop_bit),
+		       timeout_param));
 }
 

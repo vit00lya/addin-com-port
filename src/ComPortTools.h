@@ -43,6 +43,8 @@ private:
 
     std::string extensionName() override;
     std::unique_ptr<xserial::ComPort> com_;
+    xserial::ComPort::eParty getParty(const variant_t&);
+    xserial::ComPort::eStopBit getStopBit(const variant_t&);
 
 };
 
