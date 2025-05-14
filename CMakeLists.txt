@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.10)
-project(SampleAddIn)
+cmake_minimum_required(VERSION 3.18)
+project(ComPortTools)
 
 set(CMAKE_CXX_STANDARD 17)
 set(TARGET ComPortTools)
 
-option(CASE_INSENSITIVE "Case insensitive method names" OFF) #Имена методов без учета регистра
+option(CASE_INSENSITIVE "Case insensitive method names" ON) #Имена методов без учета регистра
 option(STATIC_CRT "Static CRT linkage" OFF) #Это флаг, который указывает, что проект должен линковаться со статической версией стандартной библиотеки C/C++ (CRT — C Runtime Library), а не с динамической (DLL).
 option(OUT_PARAMS "Support output parameters" OFF) # Поддержка выходных параметров
 
@@ -18,7 +18,8 @@ list(APPEND SOURCES
         src/ComPortTools.cpp
         src/ComPortTools.h
 	src/xserial.cpp
-        src/xserial.hpp)
+        src/xserial.hpp
+	src/str_switch.h)
 
 if (DEBUG_APP STREQUAL 1)
 
@@ -30,12 +31,6 @@ target_include_directories(${TARGET} PRIVATE
         include)
 
 else()
-
-if (ANDROID)
-    list(APPEND SOURCES
-            src/jnienv.cpp
-            src/jnienv.h)
-endif ()
 
 add_library(${TARGET} SHARED
         ${SOURCES})
@@ -54,13 +49,6 @@ endif ()
 
 target_include_directories(${TARGET} PRIVATE
         include)
-
-#
-# Почему-то срабатывает даже если MSVC установлена, пробовал на Windows 11
-#if (WIN32 AND NOT MSVC)
-#    message(FATAL_ERROR "Must be compiled with MSVC on Windows")
-#endif ()
-#
 
 if (WIN32)
     if (STATIC_CRT)
@@ -99,13 +87,17 @@ if (UNIX)
         set(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
         set(CMAKE_CXX_FLAGS "-m32 ${CMAKE_CXX_FLAGS}")
     endif ()
-endif ()
 
-if (ANDROID)
-    if (CMAKE_BUILD_TYPE STREQUAL Release)
-        add_custom_command(TARGET ${TARGET} POST_BUILD
-                COMMAND ${CMAKE_STRIP} ${CMAKE_SHARED_LIBRARY_PREFIX}${TARGET}${CMAKE_SHARED_LIBRARY_SUFFIX})
-    endif ()
+
+    add_custom_target(
+	package
+    	COMMAND zip -j build/ComPortTools_Componenta.zip MANIFEST.XML build/lib${TARGET}.so
+    	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    	DEPENDS ${TARGET}
+	)
+
+
+
 endif ()
 
 endif ()

@@ -65,13 +65,14 @@ namespace xserial {
 			   char dataBits,
 			   eStopBit stopBits,
 			   eMode comPortMode,
-			   unsigned long timeout,
+			   long timeout,
 			   std::string comPortName) {
         if (isOpenPort) {
             close();
             isOpenPort = false;
         }
         numOpenComPort = numComPort;
+	timeout_ = timeout;
         #if defined(__MINGW32__) || defined(_WIN32)
         std::string comPortName = "\\\\.\\COM";
         ZeroMemory(&dcbComPort,sizeof(DCB));
@@ -193,8 +194,9 @@ namespace xserial {
             return false;
         };
         isOpenPort = true;
+	
         return true;
-        #endif
+        #endif  
 
         #ifdef __linux
         std::string _comPortName("/dev/");
@@ -350,8 +352,8 @@ namespace xserial {
                 return false;
             break;
         }
-        cfsetospeed (&tty, baudRate);
-        cfsetispeed (&tty, baudRate);
+	// cfsetospeed (&tty, baudRate);
+	// cfsetispeed (&tty, baudRate);
         // Setting other Port Stuff
         switch (parity) {
             case COM_PORT_EVENPARITY:
@@ -478,7 +480,7 @@ namespace xserial {
 	    int pos = name.find_first_of("0123456789");
 	    int pos0 = name.find_first_of("t");
             isFound = true;
-            comPortName = name.substr(pos0, pos - pos0);
+	    std::string comPortName = name.substr(pos0, pos - pos0);
             std::string num = name.substr(pos);
             autoFoundComPort = atoi(const_cast<char*>(num.c_str()));
             break;
@@ -526,13 +528,25 @@ namespace xserial {
         return openPort(numComPort, baudRate, defaultParity, defaultDataBits, defaultStopBit, defaultMode);
     }
 
-    ComPort::ComPort(unsigned short numComPort, unsigned long baudRate, eParity parity, char dataBits, eStopBit stopBits) {
-        openPort(numComPort, baudRate, parity, dataBits, stopBits, defaultMode);
+  ComPort::ComPort(unsigned short numComPort,
+		   unsigned long baudRate,
+		   eParity parity,
+		   char dataBits,
+		   eStopBit stopBits,
+		   long timeout,
+		   std::string linuxNameComPort) {
+    openPort(numComPort, baudRate, parity, dataBits, stopBits, defaultMode, timeout, linuxNameComPort);
     }
 
-    bool ComPort::open(unsigned short numComPort, unsigned long baudRate, eParity parity, char dataBits, eStopBit stopBits) {
+  bool ComPort::open(unsigned short numComPort,
+		     unsigned long baudRate,
+		     eParity parity,
+		     char dataBits,
+		     eStopBit stopBits,
+		     long timeout,
+		     std::string linuxNameComPort ) {
         close();
-        return openPort(numComPort, baudRate, parity, dataBits, stopBits, defaultMode);
+        return openPort(numComPort, baudRate, parity, dataBits, stopBits, defaultMode, timeout, linuxNameComPort);
     }
 
     ComPort::ComPort(unsigned long baudRate, eParity parity, char dataBits, eStopBit stopBits) {
@@ -752,15 +766,19 @@ namespace xserial {
                 while(numRedByte == 0) {
                     ClearCommError(hComPort, &temp, &comstat); // заполнить структуру COMSTAT
                     numRedByte = comstat.cbInQue; //получить количество принятых байтов
+		    if(timeout_ != 0)
+		      if(countdownIsOver(start_time, timeout_)){
+		      return "timeout";
+		  }
                 }
                 // считаем 1 байт
                 if(!ReadFile(hComPort, &data, 1, &dwBytesRead, NULL)){
                     printf("read error\r\n");
                     return strLine;
                 }
-	        if(timeout != 0)
-		  if(countdownIsOver(start_time, timeout)){
-		    break;
+	        if(timeout_ != 0)
+		  if(countdownIsOver(start_time, timeout_)){
+		     return "timeout";
 		  }
 		 
                 if (dwBytesRead > 0) {
@@ -781,6 +799,10 @@ namespace xserial {
                 // будем проверять наличие принятого байта, пока он не появится
                 while(bytesAvaiable == 0) {
                     ioctl(hComPort, FIONREAD, &bytesAvaiable);
+		    if(timeout_ != 0)
+		      if(countdownIsOver(start_time, timeout_)){
+		       return "timeout";
+		      }
                 }
                 // считаем 1 байт
                 int iOut = ::read(hComPort, &data, 1);
@@ -789,9 +811,9 @@ namespace xserial {
                     return strLine;
                 }
 		
-		 if(timeout != 0)
-		  if(countdownIsOver(start_time, timeout)){
-		    break;
+		 if(timeout_ != 0)
+		  if(countdownIsOver(start_time, timeout_)){
+		    return "timeout";
 		  }
 		 
                 if (iOut > 0) {
@@ -831,7 +853,7 @@ namespace xserial {
             #if defined(__MINGW32__) || defined(_WIN32)
             DWORD dwBytesRead; // считанные байты
             DWORD numRedByte, temp; // temp - заглушка
-            COMSTAT comstat; // структура для получения притяных байтов
+            COMSTAT comstat; // структура для получения принятых байт
             while(1) {
                 ClearCommError(hComPort, &temp, &comstat); // заполнить структуру COMSTAT
                 numRedByte = comstat.cbInQue; //получить количество принятых байтов

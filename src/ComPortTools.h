@@ -17,35 +17,50 @@
  *
  */
 
-#ifndef SAMPLEADDIN_H
-#define SAMPLEADDIN_H
+#ifndef COMPORTTOOLS_H
+#define COMPORTTOOLS_H
 
 #include "Component.h"
 #include "xserial.hpp"
-#include <memory>
 #include "types.h"
+#include "str_switch.h"
+#include <optional>
 
 class ComPortTools final : public Component {
 public:
     const char *Version = u8"1.0.0";
 
     ComPortTools();
-    void Init(const variant_t &number_com_port = 0,
-	      const variant_t &baud_rate = 9600,
-	      const variant_t &data_bits = 8,
-	      const variant_t &parity = "NOPARITY",
-       	      const variant_t &stop_bit = "ONESTOPBIT",
-	      const variant_t &timeout = 0);
-    const variant_t &linux_name_com_port = "ttyUSB";
-    variant_t GetLine();
+    // void Init(const variant_t &number_com_port = 0,
+    //const variant_t &baud_rate = 9600,
+    //	      const variant_t &data_bits = 8,
+    //	      const variant_t &parity = "no",
+    //   	      const variant_t &stop_bit = "one",
+    //	      const variant_t &timeout = 0,
+    //	      const variant_t &linux_name_com_port = "ttyUSB");
+
+    ComPortTools(const ComPortTools&) = delete;
+    ComPortTools& operator=(const ComPortTools& other) = delete;
+    
+    //variant_t GetLine();
 
 private:
 
-    std::string extensionName() override;
-    std::unique_ptr<xserial::ComPort> com_;
-    xserial::ComPort::eParty getParty(const variant_t&);
-    xserial::ComPort::eStopBit getStopBit(const variant_t&);
+    void InitPort(const variant_t &number_com_port = 0,
+              const variant_t &baud_rate = 9600,
+    	      const variant_t &data_bits = 8,
+    	      const variant_t &parity = "no",
+       	      const variant_t &stop_bit = "one",
+    	      const variant_t &timeout = 0,
+    	      const variant_t &linux_name_com_port = "ttyUSB");
 
-};
+    variant_t GetLine();
+
+    std::optional<xserial::ComPort> com_;
+    xserial::ComPort::eParity getParity(const variant_t&);
+    xserial::ComPort::eStopBit getStopBit(const variant_t&);
+    std::string extensionName() override;
+
+}; 
 
 #endif //ComPortTools_H

@@ -21,6 +21,8 @@
 #include <codecvt>
 #include <cwctype>
 #include <locale>
+#include <fstream>
+#include <iostream>
 
 #include "Component.h"
 
@@ -67,10 +69,11 @@ long Component::GetNProps() {
 long Component::FindProp(const WCHAR_T *prop_name) {
 
     std::wstring lookup_name = toWstring(prop_name);
-
+    
 #ifdef CASE_INSENSITIVE
-    lookup_name = toUpper(lookup_name);
 
+    lookup_name = toUpper(lookup_name);
+    
     for (auto i = 0u; i < properties_meta.size(); ++i) {
         if (toUpper(properties_meta[i].alias) == lookup_name
             || toUpper(properties_meta[i].alias_ru) == lookup_name) {
@@ -151,7 +154,7 @@ long Component::GetNMethods() {
 long Component::FindMethod(const WCHAR_T *method_name) {
 
     std::wstring lookup_name = toWstring(method_name);
-
+    
 #ifdef CASE_INSENSITIVE
     lookup_name = toUpper(lookup_name);
 
@@ -211,7 +214,7 @@ bool Component::HasRetVal(const long method_num) {
 }
 
 bool Component::CallAsProc(const long method_num, tVariant *params, const long array_size) {
-
+  
     try {
         auto args = parseParams(params, array_size);
         methods_meta[method_num].call(args);

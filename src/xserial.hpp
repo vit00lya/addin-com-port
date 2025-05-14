@@ -55,9 +55,8 @@ namespace xserial {
         @code
         // в Linux устройства могут называться по разному
         // если вам нужно по умолчанию подключаться не к ttyUSBх (где
-        // x - номер), вы можете объявить имя устройства в .h .hpp файлах
-        // например #define LINUX_SPECIFY_NAME_COM_PORT "ttyACM"
-
+        // x - номер), вы можете указать название устройства последним параметром 
+	// в методе openPort и в конструкторе ComPort
 
         xserial::ComPort com(0, 115200); // открыть порт COM0 со скоростью 115200
         com.print("Test Com Port\n"); // отправить в порт сообщение Test Com Port
@@ -105,7 +104,7 @@ namespace xserial {
         #ifdef __linux
         int hComPort = 0;
         #endif
-        unsigned long timeout = 0;
+        long timeout_ = 0;
         bool isOpenPort = false;
         unsigned char autoFoundComPort = 0;
         unsigned short numOpenComPort;
@@ -115,7 +114,7 @@ namespace xserial {
 		      char dataBits,
 		      eStopBit stopBits,
 		      eMode comPortMode,
-		      unsigned long timeout = 0,
+		      long timeout = 0,
 		      std::string comPortName = "ttyUSB");
         bool foundComPort(void);
         bool countdownIsOver(const TimePoint, long);
@@ -150,9 +149,16 @@ namespace xserial {
         @param[in] baudRate скорость
         @param[in] parity настройка проверки четности
         @param[in] dataBits количесвто бит данных
-        @param[in] stopBits настройка количесвта стоп битов
+        @param[in] stopBits настройка количества стоп битов
+	@param[in] timeout  настройка прерывания при чтении строки
         */
-        ComPort(unsigned short numComPort, unsigned long baudRate, eParity parity, char dataBits, eStopBit stopBits);
+      ComPort(unsigned short numComPort,
+	      unsigned long baudRate,
+	      eParity parity,
+	      char dataBits,
+	      eStopBit stopBits,
+	      long timeout = 0,
+	      std::string linuxNameComPort = "ttyUSB");
 
         /**@brief Инициализация первого доступного порта с настройкой всех параметров
         При инициализации класса будет октрыт первый доступный порт с настройкой всех параметров
@@ -198,9 +204,16 @@ namespace xserial {
         @param[in] parity настройка проверки четности
         @param[in] dataBits количество бит данных
         @param[in] stopBits настройка количества стоп битов
+	@param[in] timeout  настройка прерывания при чтении строки
         @return true в случе успешного выполнения и false в случае провала
         */
-        bool open(unsigned short numComPort, unsigned long baudRate, eParity parity, char dataBits, eStopBit stopBits);
+        bool open(unsigned short numComPort,
+		  unsigned long baudRate,
+		  eParity parity,
+		  char dataBits,
+		  eStopBit stopBits,
+		  long timeout,
+		  std::string linuxNameComPort);
 
         /**@brief Открыть первый доступный порт с настройкой всех параметров
         Функция откроет первый доступынй порт с настройкой всех параметров
@@ -250,7 +263,7 @@ namespace xserial {
         до символа окончания строки '\n'.
         @return считанная строка
         */
-        std::string getLine(long timeout = 0L);
+        std::string getLine();
 
         /**@brief Получить из порта слово
         Функция считывает из порта массив данных типа string

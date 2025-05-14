@@ -33,6 +33,9 @@
 #include <IMemoryManager.h>
 #include <types.h>
 
+#include <fstream>
+#include <iostream>
+
 template<class... Ts>
 struct overloaded : Ts ... {
     using Ts::operator()...;
@@ -201,7 +204,19 @@ auto Component::refTupleGen(std::vector<variant_t> &v, std::index_sequence<Indic
 template<typename T, typename C, typename ... Ts>
 void Component::AddMethod(const std::wstring &alias, const std::wstring &alias_ru, C *c, T(C::*f)(Ts ...),
                           std::map<long, variant_t> &&def_args) {
+    std::ofstream out;
+    out.open("/tmp/log.txt");
+    if (!out.is_open()) {
+        std::cerr << L"Ошибка: не удалось создать/открыть log.txt!" << std::endl;
+        return;
+    }
 
+    for(size_t i = 0; i < alias.length(); ++i){
+      out << (char)alias[i];
+    }
+    out << std::endl;
+    out.close();
+    
     MethodMeta meta{alias, alias_ru, sizeof...(Ts), !std::is_same<T, void>::value, std::move(def_args),
                     [f, c](std::vector<variant_t> &params) -> variant_t {
                         auto args = refTupleGen(params, std::make_index_sequence<sizeof...(Ts)>());
