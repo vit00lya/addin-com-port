@@ -74,7 +74,7 @@ namespace xserial {
         numOpenComPort = numComPort;
 	timeout_ = timeout;
         #if defined(__MINGW32__) || defined(_WIN32)
-        std::string comPortName = "\\\\.\\COM";
+        std::string _comPortName = "\\\\.\\COM";
         ZeroMemory(&dcbComPort,sizeof(DCB));
         //char dcbBuffer[256];
         //sprintf(dcbBuffer,"baud=%d parity=N data=8 stop=1", baudRate);
@@ -88,9 +88,9 @@ namespace xserial {
             isOpenPort = false;
             return false;
         }
-        comPortName += std::to_string(numComPort);
+        _comPortName += std::to_string(numComPort);
         //printf("num = %d\n",numComPort);
-        hComPort = CreateFile(comPortName.c_str(),GENERIC_READ | GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
+        hComPort = CreateFile((LPWSTR)_comPortName.c_str(),GENERIC_READ | GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
         if (hComPort == INVALID_HANDLE_VALUE) {
             printf("Error opening port\r\n");
             isOpenPort = false;
@@ -442,7 +442,7 @@ namespace xserial {
         #if defined(__MINGW32__) || defined(_WIN32)
         char physical[65536]; // имена устройств
         // получим список устройств
-        QueryDosDevice(NULL, physical, sizeof(physical));
+        QueryDosDevice(NULL, (LPWSTR)physical, sizeof(physical));
         unsigned long i = 0;
         while(1) {
             char* nameDevice = &physical[i]; // текущее имя устройства
@@ -1053,7 +1053,7 @@ namespace xserial {
         #if defined(__MINGW32__) || defined(_WIN32)
         char physical[65536]; // имена устройств
         // получим список устройств
-        QueryDosDevice(NULL, physical, sizeof(physical));
+        QueryDosDevice(NULL, (LPWSTR)physical, sizeof(physical));
         unsigned long i = 0;
         while(1) {
             char* nameDevice = &physical[i]; // текущее имя устройства
@@ -1093,7 +1093,7 @@ namespace xserial {
         #if defined(__MINGW32__) || defined(_WIN32)
         char physical[65536]; // имена устройств
         // получим список устройств
-        QueryDosDevice(NULL, physical, sizeof(physical));
+        QueryDosDevice(NULL, (LPWSTR)physical, sizeof(physical));
         unsigned long i = 0;
         serial.resize(0);
         serial.clear();
