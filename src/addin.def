@@ -1,7 +1,0 @@
-LIBRARY "ComPortTools"
-
-EXPORTS
-GetClassObject
-DestroyObject
-GetClassNames
-SetPlatformCapabilities

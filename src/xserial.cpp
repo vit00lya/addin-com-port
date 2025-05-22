@@ -535,7 +535,10 @@ namespace xserial {
 		   eStopBit stopBits,
 		   long timeout,
 		   std::string linuxNameComPort) {
-    openPort(numComPort, baudRate, parity, dataBits, stopBits, defaultMode, timeout, linuxNameComPort);
+      bool result = openPort(numComPort, baudRate, parity, dataBits, stopBits, defaultMode, timeout, linuxNameComPort);
+      if (!result){
+	throw std::invalid_argument("Error when opening the port.");
+      }
     }
 
   bool ComPort::open(unsigned short numComPort,
