@@ -1,103 +1,81 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.10)
+
 project(ComPortTools)
-
-set(CMAKE_CXX_STANDARD 17)
 set(TARGET ComPortTools)
-
-option(CASE_INSENSITIVE "Case insensitive method names" ON) #Имена методов без учета регистра
-option(STATIC_CRT "Static CRT linkage" OFF) #Это флаг, который указывает, что проект должен линковаться со статической версией стандартной библиотеки C/C++ (CRT — C Runtime Library), а не с динамической (DLL).
-option(OUT_PARAMS "Support output parameters" OFF) # Поддержка выходных параметров
+set(CMAKE_CXX_STANDARD 17)
 
 list(APPEND SOURCES
-        src/addin.def
-        src/stdafx.h
-        src/dllmain.cpp
-        src/exports.cpp
-        src/Component.cpp
-        src/Component.h
-        src/ComPortTools.cpp
-        src/ComPortTools.h
-	src/xserial.cpp
-        src/xserial.hpp
-	src/str_switch.h)
+	    	src/AddInNative.cpp
+		src/AddInNative.def
+		src/AddInNative.h
+		src/AddInNative.rc
+		src/ComPortTools.cpp
+		src/ComPortTools.h
+		src/xserial.cpp
+		src/xserial.hpp
+		src/str_switch.h
+		src/stdafx.h)
 
-if (DEBUG_APP STREQUAL 1)
-
-list(APPEND SOURCES
+if (DEBUG_APP)
+   list(APPEND SOURCES
         src/test_app.cpp)
 
-add_executable(${TARGET} ${SOURCES})
-target_include_directories(${TARGET} PRIVATE
-        include)
-
+   add_executable(${TARGET} ${SOURCES})
+   target_compile_definitions(${TARGET} PRIVATE UNICODE _UNICODE)
+   target_include_directories(${TARGET} PRIVATE include)	
 else()
 
-add_library(${TARGET} SHARED
-        ${SOURCES})
+  add_library(${TARGET} SHARED  ${SOURCES})
 
-target_compile_definitions(${TARGET} PRIVATE
-        UNICODE
-        _UNICODE)
+  target_compile_definitions(${TARGET} PRIVATE UNICODE _UNICODE)
+  target_include_directories(${TARGET} PRIVATE include)
+  set (LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+  set (EXECUTABLE_OUTPUT_PATH ${LIBRARY_OUTPUT_PATH})
+  set (CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
 
-if (CASE_INSENSITIVE)
-    target_compile_definitions(${TARGET} PRIVATE CASE_INSENSITIVE)
-endif ()
+   if (UNIX)
+	   set(MySuffix1 "Lin")
+	   if (TARGET_PLATFORM_32)
+		set(MySuffix2 "32")
+	   else()
+		set(MySuffix2 "64")
+	   endif()
+	   if(TARGET_PLATFORM_ARM64)
+	   	set(MySuffix2 "arm64")
+	   endif()
+   else(UNIX)
+	   if (NOT MSVC)
+		   message(FATAL_ERROR "Must be compiled with MSVC on Windows")
+	   endif(NOT MSVC)
+	   set(MyPrefix "lib")
+	   set(MySuffix1 "Win")
+   endif(UNIX)
 
-if (OUT_PARAMS)
-    target_compile_definitions(${TARGET} PRIVATE OUT_PARAMS)
-endif ()
+   set_target_properties( ${PROJECT_NAME} PROPERTIES
+	      OUTPUT_NAME ${MyPrefix}${PROJECT_NAME}${MySuffix1}${MySuffix2} 
+	      POSITION_INDEPENDENT_CODE ON 
+	      CXX_STANDARD_REQUIRED ON
+	      CXX_STANDARD 17
+      )
 
-target_include_directories(${TARGET} PRIVATE
-        include)
+   if (UNIX)
+   	if (!TARGET_PLATFORM_ARM64)
+	   if (TARGET_PLATFORM_32)
+		   set(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
+		   set(CMAKE_CXX_FLAGS "-m32 ${CMAKE_CXX_FLAGS}")
+	   else(TARGET_PLATFORM_32)
+		   set(CMAKE_C_FLAGS "-m64 ${CMAKE_C_FLAGS}")
+		   set(CMAKE_CXX_FLAGS "-m64 ${CMAKE_CXX_FLAGS}")
+	   endif ()
+	 endif ()
+	   target_link_libraries(${PROJECT_NAME})
+   else(UNIX)
+	   add_definitions(/MT)
+	   set(CMAKE_SUPPRESS_REGENERATION 1)
+	   set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+	   target_compile_definitions(${TARGET} PRIVATE _WINDOWS
+			   _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
+	   target_compile_options(${TARGET} PRIVATE /utf-8)
+   endif(UNIX)
 
-if (WIN32)
-    if (STATIC_CRT)
-        string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-        string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-    endif ()
-    target_compile_definitions(${TARGET} PRIVATE
-            _WINDOWS
-            _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
-    target_compile_options(${TARGET} PRIVATE /utf-8)
-endif ()
-
-if (UNIX)
-
-    if (WIN32_COMPILE_LINUX STREQUAL 1)
-       message(STATUS "Win32 compile linux on")
-       
-       add_definitions(-DWIN32_COMPILE_LINUX)
-       
-       # specify the cross compiler
-       set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
-       set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
-       set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)
-
-       set(CMAKE_FIND_ROOT_PATH /usr/x86_64-w64-mingw32)
-
-       # search for programs in the build host directories
-       set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-       # for libraries and headers in the target directories
-       set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-       set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-    endif()
-    
-    if (TARGET_ARCH STREQUAL "x86")
-        set(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
-        set(CMAKE_CXX_FLAGS "-m32 ${CMAKE_CXX_FLAGS}")
-    endif ()
-
-
-    add_custom_target(
-	package
-    	COMMAND zip -j build/ComPortTools_Componenta.zip MANIFEST.XML build/lib${TARGET}.so
-    	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    	DEPENDS ${TARGET}
-	)
-
-
-
-endif ()
-
-endif ()
+endif()

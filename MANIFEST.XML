@@ -1,4 +1,9 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <bundle xmlns="http://v8.1c.ru/8.2/addin/bundle">
-  <component os="Windows" path="ComPortTools.dll" type="native" arch="x86_64" />
+  <component os="Windows" path="AddInNative_Win32.dll" type="native" arch="i386" />
+  <component os="Windows" path="AddInNative_Win64.dll" type="native" arch="x86_64" />
+  <component os="Linux" path="libComPortToolsLin32.so" type="native" arch="i386" />
+  <component os="Linux" path="libComPortToolsLin64.so" type="native" arch="x86_64" />
+  <component os="Linux" path="libComPortToolsLinarm64.so" type="native" arch="ARM64" />
+  <component os="Linux" path="AddInNative_LinE2KV4-8C.so" type="native" arch="E2K" />
 </bundle>

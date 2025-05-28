@@ -1,6 +1,5 @@
 ﻿#include <stdexcept>
 #include <string>
-
 #include "str_switch.h"
 #include "ComPortTools.h"
 
@@ -16,20 +15,24 @@ ComPortTools::ComPortTools()
 
 
 	AddFunction(u"GetLine", u"ПолучитьСтроку", [&]() { this->result = this->GetLine(); });
+	AddProcedure(u"SendLine", u"ОтправитьСтроку", [&](VH text){this->SendLine(text);}); 
 	AddProcedure(u"InitPort", u"ИнициализироватьПорт", [&](VH number_com_port,
 							       VH baud_rate,
 							       VH data_bits,
 							       VH parity,
 							       VH stop_bit,
 							       VH timeout, 
-							       VH linux_name_com_port) { this->InitPort(number_com_port,
-													baud_rate,
-													data_bits,
-													parity,
-													stop_bit,
-													timeout,
-													linux_name_com_port); });
-
+							       VH linux_name_com_port)
+	                                                      {
+			      this->InitPort(number_com_port,baud_rate,data_bits,parity,stop_bit,timeout,linux_name_com_port);},
+		     {{0, DefaultHelper(static_cast<int64_t>(0))},
+		      {1, DefaultHelper(static_cast<int64_t>(9600))},
+		      {2, DefaultHelper(static_cast<int64_t>(8))},
+		      {3, u"no"},
+		      {4, u"one"},
+		      {5, DefaultHelper(static_cast<int64_t>(5))},
+		      {6, u"ttyUSB"},
+		     });
 }
 
 std::string ComPortTools::GetLine()
@@ -41,6 +44,17 @@ std::string ComPortTools::GetLine()
     AddError(u"Порт не настроен, получение строки невозможно", 1009);
     return "Порт не настроен, получение строки невозможно.";
   }
+}
+
+void ComPortTools::SendLine(std::string text)
+{
+  
+  if(com_.has_value()) {
+    com_.value().print(text.data());
+  }
+  else {
+    AddError(u"Порт не настроен, отправка строки невозможна", 1009);
+   }
 }
 
 void ComPortTools::InitPort(const int &number_com_port,

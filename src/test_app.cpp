@@ -4,8 +4,9 @@
 int main(){
     
   ComPortTools com = ComPortTools();
-  com.InitPort(10,9600,8,"no","one",5,"ttyUSB");
+  com.InitPort(0,9600,8,"no","one",5,"ttyUSB");
   std::cout << com.GetLine() << std::endl;
+  com.SendLine("OK");
   return 0;
   
 }
