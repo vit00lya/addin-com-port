@@ -90,7 +90,7 @@ namespace xserial {
         }
         _comPortName += std::to_string(numComPort);
         //printf("num = %d\n",numComPort);
-        hComPort = CreateFile((LPWSTR)_comPortName.c_str(),GENERIC_READ | GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
+        hComPort = CreateFileA(comPortName.c_str(),GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
         if (hComPort == INVALID_HANDLE_VALUE) {
             printf("Error opening port\r\n");
             isOpenPort = false;
