@@ -79,11 +79,6 @@ std::wstring MB2WC(const std::string& str)
 	return converter.from_bytes(str);
 }
 
-std::string  AddInNative::U16StringToString(const std::u16string& u16str) {
-       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
-       return converter.to_bytes(u16str);
-}
-
 std::map<std::u16string, CompFunction> AddInNative::components;
 
 AddInNative::AddInNative(void) : result(nullptr, this) {

@@ -20,11 +20,11 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-*/
+*/ 
 
 #include "xserial.hpp"
 
-#if defined(__MINGW32__) || defined(_WIN32)
+#ifdef _WINDOWS
 #include <windows.h>
 #include <iostream>
 #endif
@@ -73,7 +73,7 @@ namespace xserial {
         }
         numOpenComPort = numComPort;
 	timeout_ = timeout;
-        #if defined(__MINGW32__) || defined(_WIN32)
+        #ifdef _WINDOWS
         std::string _comPortName = "\\\\.\\COM";
         ZeroMemory(&dcbComPort,sizeof(DCB));
         //char dcbBuffer[256];
@@ -90,7 +90,7 @@ namespace xserial {
         }
         _comPortName += std::to_string(numComPort);
         //printf("num = %d\n",numComPort);
-        hComPort = CreateFileA(comPortName.c_str(),GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
+        hComPort = CreateFileA(_comPortName.c_str(),GENERIC_READ | GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
         if (hComPort == INVALID_HANDLE_VALUE) {
             printf("Error opening port\r\n");
             isOpenPort = false;
@@ -439,7 +439,7 @@ namespace xserial {
 
     bool ComPort::foundComPort(void) {
         bool isFound = 0;
-        #if defined(__MINGW32__) || defined(_WIN32)
+        #ifdef _WINDOWS
         char physical[65536]; // имена устройств
         // получим список устройств
         QueryDosDevice(NULL, (LPWSTR)physical, sizeof(physical));
@@ -573,7 +573,7 @@ namespace xserial {
 
     ComPort::~ComPort() {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             CloseHandle(hComPort);
             #endif
             #ifdef __linux
@@ -585,7 +585,7 @@ namespace xserial {
 
     bool ComPort::write(char* data, unsigned long len) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             DWORD dwBytesWrite = len; // кол-во записанных байтов
             if(!WriteFile(hComPort, data, len, &dwBytesWrite, NULL)){
                 printf("write error\r\n");
@@ -606,7 +606,7 @@ namespace xserial {
                 return true;
             #endif
         } else {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             printf("com port is not open!\r\n");
             return false;
             #endif
@@ -619,7 +619,7 @@ namespace xserial {
 
     unsigned long ComPort::read(char* data, unsigned long maxNumBytesRead) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             DWORD dwBytesRead = 0;
             DWORD numRedByte, temp;
             COMSTAT comstat;
@@ -646,7 +646,7 @@ namespace xserial {
             }
             #endif
         } else {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             printf("com port is not open!\r\n");
             return 0;
             #endif
@@ -659,7 +659,7 @@ namespace xserial {
 
     unsigned long ComPort::bytesToRead(void) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             unsigned long numRedByte, temp; // temp - заглушка
             COMSTAT comstat; // структура для получения притяных байтов
             ClearCommError(hComPort, &temp, &comstat); // заполнить структуру COMSTAT
@@ -673,7 +673,7 @@ namespace xserial {
             return bytes;
             #endif
         } else {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             printf("com port is not open!\r\n");
             return 0;
             #endif
@@ -687,7 +687,7 @@ namespace xserial {
     char ComPort::readByte(void) {
         char data = 0;
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             DWORD dwBytesRead; // считанные байты
             DWORD numRedByte, temp; // temp - заглушка
             COMSTAT comstat; // структура для получения притяных байтов
@@ -727,7 +727,7 @@ namespace xserial {
                 return '\0';
             #endif
         } else {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             printf("com port is not open!\r\n");
             return 0;
             #endif
@@ -741,7 +741,7 @@ namespace xserial {
 
     void ComPort::close(void) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             CloseHandle(hComPort);
             #endif
             #ifdef __linux
@@ -758,7 +758,7 @@ namespace xserial {
         if (isOpenPort) {
 	  
 	  const TimePoint start_time = std::chrono::steady_clock::now(); 
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             DWORD dwBytesRead; // считанные байты
             DWORD numRedByte, temp; // temp - заглушка
             COMSTAT comstat; // структура для получения притяных байтов
@@ -830,7 +830,7 @@ namespace xserial {
             return strLine;
             #endif
         } else {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             printf("com port is not open!\r\n");
             return strLine;
             #endif
@@ -853,7 +853,7 @@ namespace xserial {
         bool isStart = false;
         std::string strLine = "";
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             DWORD dwBytesRead; // считанные байты
             DWORD numRedByte, temp; // temp - заглушка
             COMSTAT comstat; // структура для получения принятых байт
@@ -916,7 +916,7 @@ namespace xserial {
             return strLine;
             #endif
         } else {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             printf("com port is not open!\r\n");
             return "";
             #endif
@@ -937,7 +937,7 @@ namespace xserial {
 
     void ComPort::flushRx(void) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             PurgeComm(hComPort, PURGE_RXCLEAR | PURGE_RXABORT);
             #endif
         }
@@ -945,7 +945,7 @@ namespace xserial {
 
     void ComPort::flushTx(void) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             PurgeComm(hComPort, PURGE_TXCLEAR | PURGE_TXABORT);
             #endif
         }
@@ -953,7 +953,7 @@ namespace xserial {
 
     void ComPort::flushRxAndTx(void) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             PurgeComm(hComPort, PURGE_RXCLEAR | PURGE_RXABORT);
             PurgeComm(hComPort, PURGE_TXCLEAR | PURGE_TXABORT);
             #endif
@@ -965,7 +965,7 @@ namespace xserial {
 
     bool ComPort::operator << (char data) {
         if (isOpenPort) {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             DWORD dwBytesWrite = 0; // кол-во записанных байтов
             if(!WriteFile(hComPort, &data, 1, &dwBytesWrite, NULL)){
                 printf("write error\r\n");
@@ -986,7 +986,7 @@ namespace xserial {
                 return true;
             #endif
         } else {
-            #if defined(__MINGW32__) || defined(_WIN32)
+            #ifdef _WINDOWS
             printf("com port is not open!\r\n");
             return false;
             #endif
@@ -1053,7 +1053,7 @@ namespace xserial {
             it++;
         }
         #endif
-        #if defined(__MINGW32__) || defined(_WIN32)
+        #ifdef _WINDOWS
         char physical[65536]; // имена устройств
         // получим список устройств
         QueryDosDevice(NULL, (LPWSTR)physical, sizeof(physical));
@@ -1093,7 +1093,7 @@ namespace xserial {
             it++;
         }
         #endif
-        #if defined(__MINGW32__) || defined(_WIN32)
+        #ifdef _WINDOWS
         char physical[65536]; // имена устройств
         // получим список устройств
         QueryDosDevice(NULL, (LPWSTR)physical, sizeof(physical));

@@ -93,7 +93,7 @@ xserial::ComPort::eParity ComPortTools::getParity(const std::string& parity){
     CASE ("space"):
 	return xserial::ComPort::eParity::COM_PORT_SPACEPARITY;
       DEFAULT:
-	 throw std::runtime_error(u8"Не правльно задан контроль четности, параметр не распознан.");
+	 throw std::runtime_error("Не правльно задан контроль четности, параметр не распознан.");
   }
   
 }
@@ -110,7 +110,7 @@ xserial::ComPort::eStopBit ComPortTools::getStopBit(const std::string& stop_bit)
     CASE ("onefive"):
 	return xserial::ComPort::eStopBit::COM_PORT_ONE5STOPBITS;
       DEFAULT:
-	 throw std::runtime_error(u8"Не правльно задан стоповый бит, параметр не распознан.");
+	 throw std::runtime_error("Не правльно задан стоповый бит, параметр не распознан.");
   }
   
 }

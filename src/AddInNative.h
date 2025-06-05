@@ -120,7 +120,6 @@ protected:
 	static std::u16string MB2WCHAR(std::string_view src);
 	WCHAR_T* W(const char16_t* str) const;
 	static std::string version();
-  	bool AddError(const std::u16string& descr, long scode = 0);
 
 private:
 	struct Prop {
@@ -143,6 +142,7 @@ private:
 	bool ADDIN_API AllocMemory(void** pMemory, unsigned long ulCountByte) const;
 	void ADDIN_API FreeMemory(void** pMemory) const;
 
+
 	friend const WCHAR_T* GetClassNames();
 	static std::u16string getComponentNames();
 	friend long GetClassObject(const WCHAR_T*, IComponentBase**);
@@ -155,6 +155,7 @@ private:
 	bool alias = false;
 
 public:
+	bool AddError(const std::u16string& descr, long scode = 0);
 	AddInNative(void) ;
 	virtual ~AddInNative() {}
 	// IInitDoneBase
@@ -182,7 +183,6 @@ public:
 	operator IComponentBase* () { return (IComponentBase*)this; };
 	// LocaleBase
 	virtual void ADDIN_API SetLocale(const WCHAR_T* loc) override final;
-        std::string U16StringToString(const std::u16string& u16str);
 private:
 	IMemoryManager* m_iMemory = nullptr;
 	IAddInDefBase* m_iConnect = nullptr;
