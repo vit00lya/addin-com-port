@@ -36,11 +36,8 @@
 Добавить исключения во время работы компоненты, чтобы ошибки во время работы стали более понятными.
 
 ### Видео работы
-<video src='https://rutube.ru/video/c6c5a8864e4d4dbfca950e83e5f85485/' width=320/>
-		
-### При разработке использовались библиотеки:
-За основу была взят [шаблон внешней компоненты](https://github.com/lintest/AddinTemplate) Денис Кандрашина 
-и библиотека для работы с COM-портом [xserial](https://github.com/NewYaroslav/xserial/tree/master)
+https://rutube.ru/video/c6c5a8864e4d4dbfca950e83e5f85485/
+
 		
 ### При разработке использовались библиотеки:
 За основу была взят [шаблон внешней компоненты](https://github.com/lintest/AddinTemplate) Денис Кандрашина 
