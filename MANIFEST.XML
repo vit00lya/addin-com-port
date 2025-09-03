@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<bundle xmlns="http://v8.1c.ru/8.2/addin/bundle">
-  <component os="Windows" path="AddInNative_Win32.dll" type="native" arch="i386" />
-  <component os="Windows" path="AddInNative_Win64.dll" type="native" arch="x86_64" />
+<bundle xmlns="http://v8.1c.ru/8.2/addin/bundle"  name="ComPortTools" >
+  <component os="Windows" path="libComPortToolsWin32.dll" type="native" arch="i386" />
+  <component os="Windows" path="libComPortToolsWin64.dll" type="native" arch="x86_64" />
   <component os="Linux" path="libComPortToolsLin32.so" type="native" arch="i386" />
   <component os="Linux" path="libComPortToolsLin64.so" type="native" arch="x86_64" />
   <component os="Linux" path="libComPortToolsLinarm64.so" type="native" arch="ARM64" />
