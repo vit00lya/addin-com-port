@@ -41,3 +41,7 @@
 ### При разработке использовались библиотеки:
 За основу была взят [шаблон внешней компоненты](https://github.com/lintest/AddinTemplate) Денис Кандрашина 
 и библиотека для работы с COM-портом [xserial](https://github.com/NewYaroslav/xserial/tree/master)
+		
+### При разработке использовались библиотеки:
+За основу была взят [шаблон внешней компоненты](https://github.com/lintest/AddinTemplate) Денис Кандрашина 
+и библиотека для работы с COM-портом [xserial](https://github.com/NewYaroslav/xserial/tree/master)
