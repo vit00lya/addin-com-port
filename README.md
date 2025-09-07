@@ -43,7 +43,7 @@ https://rutube.ru/video/c6c5a8864e4d4dbfca950e83e5f85485/
 За основу была взят [шаблон внешней компоненты](https://github.com/lintest/AddinTemplate) Денис Кандрашина 
 и библиотека для работы с COM-портом [xserial](https://github.com/NewYaroslav/xserial/tree/master)
 
-### Публикация на сторонних ресурсов
+### Публикация на сторонних ресурсах
 
 ![Лого инфостарт](https://infostart.ru/bitrix/templates/sandbox_empty/assets/tpl/abo/img/logo.svg)
 
