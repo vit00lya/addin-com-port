@@ -13,8 +13,10 @@ ComPortTools::ComPortTools()
 		u"Version", u"Версия",
 		[&](VH var) { var = this->version(); });
 
-
-	AddFunction(u"GetLine", u"ПолучитьСтроку", [&]() { this->result = this->GetLine(); });
+	AddProcedure(u"FlushRxAndTx", u"ОчиститьВходИВыходПорта", [&](){this->FlushRxAndTx();});
+	AddFunction(u"GetByte", u"ПолучитьБайт", [&](){this->result = this->GetByte();});
+	AddFunction(u"GetLine", u"ПолучитьСтроку", [&](VH line_ending_character) { this->result = this->GetLine(line_ending_character);
+	},{{0, DefaultHelper(static_cast<int64_t>(10))}}); // По умолчанию ищем символ переноса строки
 	AddProcedure(u"SendLine", u"ОтправитьСтроку", [&](VH text){this->SendLine(text);}); 
 	AddProcedure(u"InitPort", u"ИнициализироватьПорт", [&](VH number_com_port,
 							       VH baud_rate,
@@ -35,10 +37,11 @@ ComPortTools::ComPortTools()
 		     });
 }
 
-std::string ComPortTools::GetLine()
+std::string ComPortTools::GetLine(int64_t line_ending_character)
 {
   if(com_.has_value()) {
-    return com_.value().getLine();
+    char separator_char = static_cast<char>(line_ending_character);
+    return com_.value().getLine(line_ending_character);
   }
   else {
     AddError(u"Порт не настроен, получение строки невозможно", 1009);
@@ -46,11 +49,38 @@ std::string ComPortTools::GetLine()
   }
 }
 
+int64_t ComPortTools::GetByte()
+{
+  if(com_.has_value()) {
+    int64_t result;
+    result = static_cast<int64_t>(com_.value().readByte());
+    if (result == 33){
+       AddError(u"Ошибка при чтении байта из порта", 1009);
+    }
+    return result;
+  }
+  else {
+    AddError(u"Порт не настроен, получение строки невозможно", 1009);
+    return 0;
+  }
+}
+
+void ComPortTools::FlushRxAndTx(){
+   if(com_.has_value()) {
+     com_.value().flushRxAndTx();
+  }
+  else {
+    AddError(u"Порт не настроен, очистка не возможна", 1009);
+  }
+}
+
 void ComPortTools::SendLine(std::string text)
 {
-  
   if(com_.has_value()) {
-    com_.value().print(text.data());
+      bool result = com_.value().print(text.data());
+      if (!result){
+          AddError(u"Ошибка при отправке строки", 1009);
+      }
   }
   else {
     AddError(u"Порт не настроен, отправка строки невозможна", 1009);

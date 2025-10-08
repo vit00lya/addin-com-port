@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <linux/serial.h>
 #endif
+#include <thread>
 #include <stdio.h>
 #include <string>
 #include <sstream>
@@ -170,8 +171,8 @@ namespace xserial {
         dcbComPort.fNull = FALSE;
         dcbComPort.fOutxCtsFlow = FALSE;
         dcbComPort.fOutxDsrFlow = FALSE;
-        dcbComPort.XonLim = 128;
-        dcbComPort.XoffLim = 128;
+        dcbComPort.XonLim = 1024;
+        dcbComPort.XoffLim = 1024;
 
         if(!SetCommState(hComPort, &dcbComPort)) {
             printf("Error opening port: SetCommState\r\n");
@@ -183,7 +184,7 @@ namespace xserial {
             isOpenPort = false;
             return false;
         };
-        commTimeoutsComPort.ReadIntervalTimeout          = 100; // milliseconds
+        commTimeoutsComPort.ReadIntervalTimeout          = 65535; // milliseconds
         commTimeoutsComPort.ReadTotalTimeoutMultiplier   = 0;  //
         commTimeoutsComPort.ReadTotalTimeoutConstant     = 0;  //
         commTimeoutsComPort.WriteTotalTimeoutMultiplier  = 0;  //
@@ -450,8 +451,6 @@ namespace xserial {
             char* istr = strstr (nameDevice,"COM"); // ищем COM
             if (nLen > 3 && istr != NULL) {
                 isFound = true;
-                //printf(nameDevice);
-                //printf("\n");
                 if (autoFoundComPort == 0) {;
                     nameDevice+=3;
                     autoFoundComPort = atoi (nameDevice);
@@ -685,6 +684,7 @@ namespace xserial {
     }
 
     char ComPort::readByte(void) {
+       const TimePoint start_time = std::chrono::steady_clock::now(); 
         char data = 0;
         if (isOpenPort) {
             #ifdef _WINDOWS
@@ -697,10 +697,15 @@ namespace xserial {
             while(numRedByte == 0) {
                 ClearCommError(hComPort, &temp, &comstat); // заполнить структуру COMSTAT
                 numRedByte = comstat.cbInQue; //получить количество принятых байтов
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		  if(timeout_ != 0)
+		      if(countdownIsOver(start_time, timeout_)){
+		      return 0;
+		  }
             }
             if(!ReadFile(hComPort, &data, 1, &dwBytesRead, NULL)){
                 printf("read error\r\n");
-                return '\0';
+                return 33;
             }
             if (dwBytesRead > 0) {
                 return data;
@@ -715,11 +720,12 @@ namespace xserial {
             // будем проверять наличие принятого байта, пока он не появится
             while(bytesAvaiable == 0) {
                 ioctl(hComPort, FIONREAD, &bytesAvaiable);
+	        std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
             int iOut = ::read(hComPort, &data, bytesAvaiable);
             if (iOut < 0){
                 printf("read error\n");
-                return 0;
+                return 33;
             }
             if (iOut > 0) {
                 return data;
@@ -752,7 +758,7 @@ namespace xserial {
         }
     }
 
-  std::string ComPort::getLine() {
+  std::string ComPort::getLine(char line_ending_character = 10) {
         char data;
         std::string strLine = "";
         if (isOpenPort) {
@@ -769,6 +775,7 @@ namespace xserial {
                 while(numRedByte == 0) {
                     ClearCommError(hComPort, &temp, &comstat); // заполнить структуру COMSTAT
                     numRedByte = comstat.cbInQue; //получить количество принятых байтов
+		    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		    if(timeout_ != 0)
 		      if(countdownIsOver(start_time, timeout_)){
 		      return "timeout";
@@ -779,14 +786,10 @@ namespace xserial {
                     printf("read error\r\n");
                     return strLine;
                 }
-	        if(timeout_ != 0)
-		  if(countdownIsOver(start_time, timeout_)){
-		     return "timeout";
-		  }
 		 
                 if (dwBytesRead > 0) {
                     // если был получен символ завершения строки
-                    if (data == '\n')
+                    if (data == line_ending_character)
                         break;
                     // иначе увеличим строку
                     strLine = strLine + data;
@@ -806,6 +809,7 @@ namespace xserial {
 		      if(countdownIsOver(start_time, timeout_)){
 		       return "timeout";
 		      }
+		     std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
                 // считаем 1 байт
                 int iOut = ::read(hComPort, &data, 1);
@@ -813,15 +817,10 @@ namespace xserial {
                     printf("read error\n");
                     return strLine;
                 }
-		
-		 if(timeout_ != 0)
-		  if(countdownIsOver(start_time, timeout_)){
-		    return "timeout";
-		  }
 		 
                 if (iOut > 0) {
                     // если был получен символ завершения строки
-                    if (data == '\n')
+                    if (data == line_ending_character)
                         break;
                     // иначе увеличим строку
                     strLine = strLine + data;
@@ -852,6 +851,7 @@ namespace xserial {
         char data;
         bool isStart = false;
         std::string strLine = "";
+	const TimePoint start_time = std::chrono::steady_clock::now(); 
         if (isOpenPort) {
             #ifdef _WINDOWS
             DWORD dwBytesRead; // считанные байты
@@ -864,6 +864,11 @@ namespace xserial {
                 while(numRedByte == 0) {
                     ClearCommError(hComPort, &temp, &comstat); // заполнить структуру COMSTAT
                     numRedByte = comstat.cbInQue; //получить количество принятых байтов
+		    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		     if(timeout_ != 0)
+		      if(countdownIsOver(start_time, timeout_)){
+		       return "timeout";
+		      }
                 }
                 // считаем 1 байт
                 if(!ReadFile(hComPort, &data, 1, &dwBytesRead, NULL)){
@@ -893,6 +898,7 @@ namespace xserial {
                 // будем проверять наличие принятого байта, пока он не появится
                 while(bytesAvaiable == 0) {
                     ioctl(hComPort, FIONREAD, &bytesAvaiable);
+         	     std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
                 // считаем 1 байт
                 int iOut = ::read(hComPort, &data, 1);
@@ -940,6 +946,9 @@ namespace xserial {
             #ifdef _WINDOWS
             PurgeComm(hComPort, PURGE_RXCLEAR | PURGE_RXABORT);
             #endif
+	    #ifdef __linux
+	     tcflush(hComPort,TCIFLUSH);
+            #endif
         }
     }
 
@@ -947,6 +956,9 @@ namespace xserial {
         if (isOpenPort) {
             #ifdef _WINDOWS
             PurgeComm(hComPort, PURGE_TXCLEAR | PURGE_TXABORT);
+            #endif
+	     #ifdef __linux
+	     tcflush(hComPort,TCOFLUSH);
             #endif
         }
     }
@@ -958,7 +970,7 @@ namespace xserial {
             PurgeComm(hComPort, PURGE_TXCLEAR | PURGE_TXABORT);
             #endif
             #ifdef __linux
-
+	     tcflush(hComPort,TCIOFLUSH);
             #endif
         }
     }

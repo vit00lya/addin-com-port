@@ -11,7 +11,9 @@ class ComPortTools: public AddInNative
 {
 public:
     ComPortTools();
-    std::string GetLine();
+    std::string GetLine(int64_t);
+    int64_t GetByte();
+    void FlushRxAndTx();
     void SendLine(std::string);
     void InitPort(const int &number_com_port,
               const int &baud_rate,
