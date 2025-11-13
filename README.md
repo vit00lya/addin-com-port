@@ -50,4 +50,5 @@ https://rutube.ru/video/c6c5a8864e4d4dbfca950e83e5f85485/
 
 ### Публикация на сторонних ресурсах
 [Кроссплатформенный APScale для весов CAS](https://infostart.ru/public/2525142/)
+
 ![Лого инфостарт](https://infostart.ru/bitrix/templates/sandbox_empty/assets/tpl/abo/img/logo.svg)
